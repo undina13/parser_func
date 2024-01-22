@@ -18,10 +18,30 @@ import java.util.List;
 public class ParserService {
     private final HashMap<String, Function> functionMap = FunctionMap.getFunctionMap();
 
-    public Integer getCalculation(ParserModel parserModel) {
-        List<Lexeme> lexemes = lexAnalyze(parserModel.getExpression());
+    public Boolean getCalculation(ParserModel parserModel) {
+        String[] parseExpression;
+        boolean isLess = false;
+
+        if (parserModel.getExpression().contains("<")) {
+            parseExpression = parserModel.getExpression().split("<");
+            isLess = true;
+        } else {
+            parseExpression = parserModel.getExpression().split(">");
+        }
+
+        String expression = parseExpression[0];
+        double valueExpression = Double.parseDouble(parseExpression[1]);
+        log.info("valueExpression  {}", valueExpression);
+        List<Lexeme> lexemes = lexAnalyze(expression);
         LexemeBuffer lexemeBuffer = new LexemeBuffer(lexemes);
-        return expr(lexemeBuffer);
+        double result = expr(lexemeBuffer);
+        log.info("result  {}", result);
+
+        if (isLess) {
+            return result < valueExpression;
+        } else {
+            return result > valueExpression;
+        }
     }
 
     private List<Lexeme> lexAnalyze(String expText) {
@@ -59,7 +79,7 @@ public class ParserService {
                     pos++;
                     continue;
                 default:
-                    if (c <= '9' && c >= '0') {
+                    if (c <= '9' && c >= '0' || c == '.') {
                         StringBuilder sb = new StringBuilder();
                         do {
                             sb.append(c);
@@ -68,7 +88,7 @@ public class ParserService {
                                 break;
                             }
                             c = expText.charAt(pos);
-                        } while (c <= '9' && c >= '0');
+                        } while (c <= '9' && c >= '0' || c == '.');
                         lexemes.add(new Lexeme(LexemeType.NUMBER, sb.toString()));
                     } else {
                         if (c != ' ') {
@@ -101,7 +121,7 @@ public class ParserService {
         return lexemes;
     }
 
-    private int expr(LexemeBuffer lexemes) {
+    private double expr(LexemeBuffer lexemes) {
         Lexeme lexeme = lexemes.next();
         if (lexeme.getType() == LexemeType.EOF) {
             return 0;
@@ -111,8 +131,8 @@ public class ParserService {
         }
     }
 
-    private int plusminus(LexemeBuffer lexemes) {
-        int value = multdiv(lexemes);
+    private double plusminus(LexemeBuffer lexemes) {
+        double value = multdiv(lexemes);
         while (true) {
             Lexeme lexeme = lexemes.next();
             switch (lexeme.getType()) {
@@ -134,8 +154,8 @@ public class ParserService {
         }
     }
 
-    private int multdiv(LexemeBuffer lexemes) {
-        int value = factor(lexemes);
+    private double multdiv(LexemeBuffer lexemes) {
+        double value = factor(lexemes);
         while (true) {
             Lexeme lexeme = lexemes.next();
             switch (lexeme.getType()) {
@@ -159,17 +179,17 @@ public class ParserService {
         }
     }
 
-    private int factor(LexemeBuffer lexemes) {
+    private double factor(LexemeBuffer lexemes) {
         Lexeme lexeme = lexemes.next();
         switch (lexeme.getType()) {
             case NAME:
                 lexemes.back();
                 return func(lexemes);
             case OP_MINUS:
-                int value = factor(lexemes);
+                double value = factor(lexemes);
                 return -value;
             case NUMBER:
-                return Integer.parseInt(lexeme.getValue());
+                return Double.parseDouble(lexeme.getValue());
             case LEFT_BRACKET:
                 value = plusminus(lexemes);
                 lexeme = lexemes.next();
@@ -184,7 +204,7 @@ public class ParserService {
         }
     }
 
-    private int func(LexemeBuffer lexemeBuffer) {
+    private double func(LexemeBuffer lexemeBuffer) {
         String name = lexemeBuffer.next().getValue();
         Lexeme lexeme = lexemeBuffer.next();
 
@@ -192,7 +212,7 @@ public class ParserService {
             throw new RuntimeException("Wrong function call syntax at " + lexeme.getValue());
         }
 
-        ArrayList<Integer> args = new ArrayList<>();
+        ArrayList<Double> args = new ArrayList<>();
 
         lexeme = lexemeBuffer.next();
         if (lexeme.getType() != LexemeType.RIGHT_BRACKET) {

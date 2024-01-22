@@ -18,9 +18,9 @@ public class ParserController {
     private final ParserService parserService;
 
     @PostMapping()
-    public ResponseEntity<Integer> getCalculation(@RequestBody ParserModel parserModel) {
+    public ResponseEntity<Boolean> getCalculation(@RequestBody ParserModel parserModel) {
         log.info("getCalculation  {}", parserModel);
-        Integer result = parserService.getCalculation(parserModel);
+        Boolean result = parserService.getCalculation(parserModel);
         log.info("getCalculation result {}", result);
         return ResponseEntity.ok()
                 .body(result);
