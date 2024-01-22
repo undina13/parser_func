@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -32,7 +33,8 @@ public class ParserService {
         String expression = parseExpression[0];
         double valueExpression = Double.parseDouble(parseExpression[1]);
         log.info("valueExpression  {}", valueExpression);
-        List<Lexeme> lexemes = lexAnalyze(expression);
+        List<Lexeme> lexemes = lexAnalyze(expression,
+                getVariablesMap(parserModel.getVariablesList(), parserModel.getValuesList()));
         LexemeBuffer lexemeBuffer = new LexemeBuffer(lexemes);
         double result = expr(lexemeBuffer);
         log.info("result  {}", result);
@@ -44,7 +46,7 @@ public class ParserService {
         }
     }
 
-    private List<Lexeme> lexAnalyze(String expText) {
+    private List<Lexeme> lexAnalyze(String expText, Map<String, Double> variablesMap) {
         ArrayList<Lexeme> lexemes = new ArrayList<>();
         int pos = 0;
         while (pos < expText.length()) {
@@ -92,8 +94,7 @@ public class ParserService {
                         lexemes.add(new Lexeme(LexemeType.NUMBER, sb.toString()));
                     } else {
                         if (c != ' ') {
-                            if (c >= 'a' && c <= 'z'
-                                    || c >= 'A' && c <= 'Z') {
+                            if (c >= 'A' && c <= 'Z') {
                                 StringBuilder sb = new StringBuilder();
                                 do {
                                     sb.append(c);
@@ -102,9 +103,21 @@ public class ParserService {
                                         break;
                                     }
                                     c = expText.charAt(pos);
-                                } while (c >= 'a' && c <= 'z'
-                                        || c >= 'A' && c <= 'Z');
-
+                                } while (c >= 'A' && c <= 'Z');
+                                //todo проверка, если переменной нет
+                                lexemes.add(new Lexeme(LexemeType.NUMBER, variablesMap.get(sb.toString()).toString()));
+                                log.info("VARIABLE  {}", sb);
+                            } else if (c >= 'a' && c <= 'z') {
+                                StringBuilder sb = new StringBuilder();
+                                do {
+                                    sb.append(c);
+                                    pos++;
+                                    if (pos >= expText.length()) {
+                                        break;
+                                    }
+                                    c = expText.charAt(pos);
+                                } while (c >= 'a' && c <= 'z');
+                                log.info("NAME  {}", sb);
                                 if (functionMap.containsKey(sb.toString())) {
                                     lexemes.add(new Lexeme(LexemeType.NAME, sb.toString()));
                                 } else {
@@ -118,6 +131,7 @@ public class ParserService {
             }
         }
         lexemes.add(new Lexeme(LexemeType.EOF, ""));
+
         return lexemes;
     }
 
@@ -228,5 +242,13 @@ public class ParserService {
             } while (lexeme.getType() == LexemeType.COMMA);
         }
         return functionMap.get(name).apply(args);
+    }
+
+    private Map<String, Double> getVariablesMap(List<String> variablesList, List<Double> valuesList) {
+        Map<String, Double> variablesMap = new HashMap<>();
+        for (int i = 0; i < variablesList.size(); i++) {
+            variablesMap.put(variablesList.get(i), valuesList.get(i));
+        }
+        return variablesMap;
     }
 }

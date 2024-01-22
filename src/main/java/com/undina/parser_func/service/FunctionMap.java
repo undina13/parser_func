@@ -41,6 +41,12 @@ public class FunctionMap {
             }
             return sum / args.size();
         });
+        functionTable.put("abs", args -> {
+            if (args.size() != 1) {
+                throw new RuntimeException("Wrong argument count for function rand");
+            }
+            return Math.abs(args.get(0));
+        });
         return functionTable;
     }
 }
