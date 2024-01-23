@@ -1,5 +1,7 @@
 package com.undina.parser_func.service;
 
+import com.undina.parser_func.exception.CalculationException;
+import com.undina.parser_func.exception.VariableException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import model.Lexeme;
@@ -104,7 +106,9 @@ public class ParserService {
                                     }
                                     c = expText.charAt(pos);
                                 } while (c >= 'A' && c <= 'Z');
-                                //todo проверка, если переменной нет
+                                if(!variablesMap.containsKey(sb.toString())){
+                                    throw  new VariableException("Variable " + sb + " does not exist in the list");
+                                }
                                 lexemes.add(new Lexeme(LexemeType.NUMBER, variablesMap.get(sb.toString()).toString()));
                                 log.info("VARIABLE  {}", sb);
                             } else if (c >= 'a' && c <= 'z') {
@@ -121,7 +125,7 @@ public class ParserService {
                                 if (functionMap.containsKey(sb.toString())) {
                                     lexemes.add(new Lexeme(LexemeType.NAME, sb.toString()));
                                 } else {
-                                    throw new RuntimeException("Unexpected character: " + c);
+                                    throw new CalculationException("Unexpected character: " + c);
                                 }
                             }
                         } else {
@@ -162,7 +166,7 @@ public class ParserService {
                     lexemes.back();
                     return value;
                 default:
-                    throw new RuntimeException("Unexpected token: " + lexeme.getValue()
+                    throw new CalculationException("Unexpected token: " + lexeme.getValue()
                             + " at position: " + lexemes.getPos());
             }
         }
@@ -187,7 +191,7 @@ public class ParserService {
                     lexemes.back();
                     return value;
                 default:
-                    throw new RuntimeException("Unexpected token: " + lexeme.getValue()
+                    throw new CalculationException("Unexpected token: " + lexeme.getValue()
                             + " at position: " + lexemes.getPos());
             }
         }
@@ -208,12 +212,12 @@ public class ParserService {
                 value = plusminus(lexemes);
                 lexeme = lexemes.next();
                 if (lexeme.getType() != LexemeType.RIGHT_BRACKET) {
-                    throw new RuntimeException("Unexpected token: " + lexeme.getValue()
+                    throw new CalculationException("Unexpected token: " + lexeme.getValue()
                             + " at position: " + lexemes.getPos());
                 }
                 return value;
             default:
-                throw new RuntimeException("Unexpected token: " + lexeme.getValue()
+                throw new CalculationException("Unexpected token: " + lexeme.getValue()
                         + " at position: " + lexemes.getPos());
         }
     }
@@ -223,7 +227,7 @@ public class ParserService {
         Lexeme lexeme = lexemeBuffer.next();
 
         if (lexeme.getType() != LexemeType.LEFT_BRACKET) {
-            throw new RuntimeException("Wrong function call syntax at " + lexeme.getValue());
+            throw new CalculationException("Wrong function call syntax at " + lexeme.getValue());
         }
 
         ArrayList<Double> args = new ArrayList<>();
@@ -236,7 +240,7 @@ public class ParserService {
                 lexeme = lexemeBuffer.next();
 
                 if (lexeme.getType() != LexemeType.COMMA && lexeme.getType() != LexemeType.RIGHT_BRACKET) {
-                    throw new RuntimeException("Wrong function call syntax at " + lexeme.getValue());
+                    throw new CalculationException("Wrong function call syntax at " + lexeme.getValue());
                 }
 
             } while (lexeme.getType() == LexemeType.COMMA);
@@ -245,6 +249,9 @@ public class ParserService {
     }
 
     private Map<String, Double> getVariablesMap(List<String> variablesList, List<Double> valuesList) {
+        if(variablesList.size() != valuesList.size()){
+            throw new VariableException("Sizes of the lists are not equal");
+        }
         Map<String, Double> variablesMap = new HashMap<>();
         for (int i = 0; i < variablesList.size(); i++) {
             variablesMap.put(variablesList.get(i), valuesList.get(i));

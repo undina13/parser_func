@@ -1,5 +1,6 @@
 package com.undina.parser_func.service;
 
+import com.undina.parser_func.exception.FunctionException;
 import lombok.experimental.UtilityClass;
 
 import java.util.HashMap;
@@ -12,7 +13,7 @@ public class FunctionMap {
         HashMap<String, Function> functionTable = new HashMap<>();
         functionTable.put("min", args -> {
             if (args.isEmpty()) {
-                throw new RuntimeException("No arguments for function min");
+                throw new FunctionException("No arguments for function min");
             }
             double min = args.get(0);
             for (Double val : args) {
@@ -24,13 +25,13 @@ public class FunctionMap {
         });
         functionTable.put("pow", args -> {
             if (args.size() != 2) {
-                throw new RuntimeException("Wrong argument count for function pow: " + args.size());
+                throw new FunctionException("Wrong argument count for function pow: " + args.size());
             }
             return Math.pow(Math.round(args.get(0)), Math.round(args.get(1)));
         });
         functionTable.put("rand", args -> {
             if (!args.isEmpty()) {
-                throw new RuntimeException("Wrong argument count for function rand");
+                throw new FunctionException("Wrong argument count for function rand");
             }
             return (Math.random() * 256f);
         });
@@ -43,7 +44,7 @@ public class FunctionMap {
         });
         functionTable.put("abs", args -> {
             if (args.size() != 1) {
-                throw new RuntimeException("Wrong argument count for function rand");
+                throw new FunctionException("Wrong argument count for function abs");
             }
             return Math.abs(args.get(0));
         });
