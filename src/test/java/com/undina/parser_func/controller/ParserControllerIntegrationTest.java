@@ -20,7 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-
 public class ParserControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
@@ -64,6 +63,21 @@ public class ParserControllerIntegrationTest {
         parserModel.setExpression("min(0.5 * A, abs(B)) > 100");
         parserModel.setVariablesList(List.of("A", "B"));
         parserModel.setValuesList(List.of(500.0, -6000.0));
+
+        mockMvc.perform(post("/parser")
+                        .content(mapper.writeValueAsString(parserModel))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(content().string("true"));
+    }
+
+    @Test
+    void getCalculationTestOkSameNameVariableAndFunction() throws Exception {
+        ParserModel parserModel = new ParserModel();
+        parserModel.setExpression("abs(0.5 * ABS + 0.5 * B) < 1000");
+        parserModel.setVariablesList(List.of("ABS", "B"));
+        parserModel.setValuesList(List.of(500.0, 600.0));
 
         mockMvc.perform(post("/parser")
                         .content(mapper.writeValueAsString(parserModel))

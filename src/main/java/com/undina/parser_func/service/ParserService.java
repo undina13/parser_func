@@ -106,8 +106,8 @@ public class ParserService {
                                     }
                                     c = expText.charAt(pos);
                                 } while (c >= 'A' && c <= 'Z');
-                                if(!variablesMap.containsKey(sb.toString())){
-                                    throw  new VariableException("Variable " + sb + " does not exist in the list");
+                                if (!variablesMap.containsKey(sb.toString())) {
+                                    throw new VariableException("Variable " + sb + " does not exist in the list");
                                 }
                                 lexemes.add(new Lexeme(LexemeType.NUMBER, variablesMap.get(sb.toString()).toString()));
                                 log.info("VARIABLE  {}", sb);
@@ -249,7 +249,7 @@ public class ParserService {
     }
 
     private Map<String, Double> getVariablesMap(List<String> variablesList, List<Double> valuesList) {
-        if(variablesList.size() != valuesList.size()){
+        if (variablesList.size() != valuesList.size()) {
             throw new VariableException("Sizes of the lists are not equal");
         }
         Map<String, Double> variablesMap = new HashMap<>();
